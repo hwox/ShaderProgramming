@@ -23,13 +23,15 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 
 	//Load shaders
 	m_SolidRectShader = CompileShaders("./Shaders/SolidRect.vs", "./Shaders/SolidRect.fs");
-	
+
 	//Create VBOs
 	CreateVertexBufferObjects();
 }
 
 void Renderer::CreateVertexBufferObjects()
 {
+
+	// 버텍스 6개의 정보를 넣어놓았음
 	float rect[]
 		=
 	{
@@ -37,8 +39,8 @@ void Renderer::CreateVertexBufferObjects()
 		-0.5, -0.5, 0.f,  0.5, 0.5, 0.f, 0.5, -0.5, 0.f, //Triangle2
 	};
 
-	glGenBuffers(1, &m_VBORect);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect);
+	glGenBuffers(1, &m_VBORect);  // 버텍스 정보가 성공했을 경우 저기에 1이 들어감 ( m_VBORect에)
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect); // arraybuffer라는 형태로 올릴것이라고 준비시킴. 이 rect가 갖고 있는 gpu 상에 올리는 과정이 필요함. 그게 glBufferData라는 api
 	glBufferData(GL_ARRAY_BUFFER, sizeof(rect), rect, GL_STATIC_DRAW);
 }
 
@@ -273,10 +275,24 @@ void Renderer::Test()
 
 	int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position");
 	glEnableVertexAttribArray(attribPosition);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect);
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect); // 여기는 총 18개의 flatpoint 가 들어가있음
+	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0); // 여기에서 그 정보를 알려주는 것 얘는 array상에서 3개씩 끊어서 버텍스를 만들어라. (방금 내가 올린 array_buffer에 올린 m_VBORect에 들어가있는 내용을 이용)
+	// 이 뒤에 필요한 게 스트라이드.... sizeof(float) * 3 (얘가 스트라이드래)
+	// 이 스트라이드가 뭘까? 
+	// 코드 상에서는 18개니까 3개씩 끊어서 줬잖아 이 스트라이드가 의미하는 건 처음에 float 포인트로 0번지 부터 시작해서 3개를 읽고 그 다음에 읽을 다음 주소를 몇 만큼 더해라. 몇 만큼 더해야 다음 주소를 읽을 것인지 정ㅎ? 
 
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	// 만약 내가 다음 거를 무시하고 싶으면? 3개 읽고 그다음 3개 무시하고 다음 3개를 읽고 싶으면
+	// sizeof(float) * 6을 하면 되지
+
+	// 이게 우리가 앞으로 이것저것 추가가 될 건데 xyz를 읽고 그 다음 sizeof(float) * 3일 때 
+	// 3씩 건너뛰었을 때 그 다음 값이 x일지 아닐지 알 수 없어 
+	// 그러니까 다음 읽을 데이터의 사이드를 알려주는 이게 필요
+
+
+
+
+	glDrawArrays(GL_TRIANGLES, 0, 6); // primitive가 여기 이 gl_triangles.
+	// array의 0번째부터 시작해서 총 6개의 vertex를 그리라는 거
 
 	glDisableVertexAttribArray(attribPosition);
 }
