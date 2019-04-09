@@ -22,6 +22,12 @@ public:
 	   
 	void Test();
 
+	void Lecture2(); //»ï°¢Çü
+	void Lecture3();
+	void Lecture4();
+
+	void Lecture5();
+	void Lecture6();
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
 	bool ReadFile(char* filename, std::string *target);
@@ -30,6 +36,9 @@ private:
 	void CreateVertexBufferObjects(); 
 	unsigned char * Renderer::loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight);
 
+	void GenQuadsVBO(int count, bool bRandPos, GLuint *id, GLuint *vcount);//·£´ýÇÑ À§Ä¡¿¡ »ï°¢Çü 1000°³
+	void CreateProxyGeometry();
+
 	bool m_Initialized = false;
 	
 	unsigned int m_WindowSizeX = 0;
@@ -37,5 +46,21 @@ private:
 
 	GLuint m_VBORect = 0;
 	GLuint m_SolidRectShader = 0;
+
+	GLuint m_VBOTri = 0;
+	GLuint m_VBOQuads = 0;
+	GLuint m_VBOQuads1 = 0;
+	GLuint m_VBOQuadsCount = 0;
+	GLuint m_VBOQuadsCount1 = 0;
+	
+	
+	GLuint m_VBO_GridMesh = 0; 
+	int m_GridMesh_count = 0;
+
+	GLuint m_VBORectColor = 0;
+
+	//shader
+	GLuint m_SimpleVelShader = 0;
+	GLuint m_SinTrailShader = 0;
 };
 

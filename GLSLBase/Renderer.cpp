@@ -23,25 +23,62 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 
 	//Load shaders
 	m_SolidRectShader = CompileShaders("./Shaders/SolidRect.vs", "./Shaders/SolidRect.fs");
+	m_SimpleVelShader = CompileShaders("./Shaders/SimpleVal.vs", "./Shaders/SimpleVal.fs");
+	m_SinTrailShader = CompileShaders("./Shaders/SimpleVal.vs", "./Shaders/SimpleVal.fs");
 
 	//Create VBOs
 	CreateVertexBufferObjects();
+
+	GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
+	GenQuadsVBO(100, false, &m_VBOQuads1, &m_VBOQuadsCount1);
+	CreateProxyGeometry();
 }
 
 void Renderer::CreateVertexBufferObjects()
 {
-
-	// 버텍스 6개의 정보를 넣어놓았음
+	float size = 0.02f;
 	float rect[]
 		=
 	{
-		-0.5, -0.5, 0.f, -0.5, 0.5, 0.f, 0.5, 0.5, 0.f, //Triangle1
-		-0.5, -0.5, 0.f,  0.5, 0.5, 0.f, 0.5, -0.5, 0.f, //Triangle2
+		-size, -size, 0.f, 0.5, //x,y,z, value
+		-size,size, 0.f, 0.5,
+		size, size, 0.f, 0.5,//Triangle1
+
+		-size, -size, 0.f,  0.5,
+		size, size, 0.f, 0.5,
+		size, -size, 0.f, 0.5//Triangle2
 	};
 
-	glGenBuffers(1, &m_VBORect);  // 버텍스 정보가 성공했을 경우 저기에 1이 들어감 ( m_VBORect에)
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect); // arraybuffer라는 형태로 올릴것이라고 준비시킴. 이 rect가 갖고 있는 gpu 상에 올리는 과정이 필요함. 그게 glBufferData라는 api
+	glGenBuffers(1, &m_VBORect); //버텍스 버퍼 오브젝트가 성공을 했으면 1보다 큰 수가 리턴
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(rect), rect, GL_STATIC_DRAW);
+
+	//lecture2
+	float tri[]
+		=
+	{
+		-1.0, -0.0, 0.f, 1.0, 0.0, 0.f, 0.0, 0.5, 0.f //Triangle1
+	};
+
+	glGenBuffers(1, &m_VBOTri); //버텍스 버퍼 오브젝트가 성공을 했으면 1보다 큰 수가 리턴
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOTri);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(tri), tri, GL_STATIC_DRAW);
+
+
+	float color[]
+		=
+	{
+		1,0,0,1, //r,g,b,a
+		1,0,0,1,
+		1,0,0,1,//Triangle1
+
+		1,0,0,1,
+		1,0,0,1,
+		1,0,0,1//Triangle2
+	};
+	glGenBuffers(1, &m_VBORectColor); //버텍스 버퍼 오브젝트가 성공을 했으면 1보다 큰 수가 리턴
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBORectColor);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(color), color, GL_STATIC_DRAW);
 }
 
 void Renderer::AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType)
@@ -122,6 +159,8 @@ GLuint Renderer::CompileShaders(char* filenameVS, char* filenameFS)
 	AddShader(ShaderProgram, vs.c_str(), GL_VERTEX_SHADER);
 
 	// ShaderProgram 에 fs.c_str() 프레그먼트 쉐이더를 컴파일한 결과를 attach함
+
+	// gl_오브젝트_쉐이더로 쉐이더 타입 지정 
 	AddShader(ShaderProgram, fs.c_str(), GL_FRAGMENT_SHADER);
 
 	GLint Success = 0;
@@ -269,30 +308,463 @@ GLuint Renderer::CreateBmpTexture(char * filePath)
 	return temp;
 }
 
+float g_Time = 0.f;
+
 void Renderer::Test()
 {
 	glUseProgram(m_SolidRectShader);
 
-	int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position");
-	glEnableVertexAttribArray(attribPosition);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect); // 여기는 총 18개의 flatpoint 가 들어가있음
-	glVertexAttribPointer(attribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0); // 여기에서 그 정보를 알려주는 것 얘는 array상에서 3개씩 끊어서 버텍스를 만들어라. (방금 내가 올린 array_buffer에 올린 m_VBORect에 들어가있는 내용을 이용)
-	// 이 뒤에 필요한 게 스트라이드.... sizeof(float) * 3 (얘가 스트라이드래)
-	// 이 스트라이드가 뭘까? 
-	// 코드 상에서는 18개니까 3개씩 끊어서 줬잖아 이 스트라이드가 의미하는 건 처음에 float 포인트로 0번지 부터 시작해서 3개를 읽고 그 다음에 읽을 다음 주소를 몇 만큼 더해라. 몇 만큼 더해야 다음 주소를 읽을 것인지 정ㅎ? 
+	//int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position");
 
-	// 만약 내가 다음 거를 무시하고 싶으면? 3개 읽고 그다음 3개 무시하고 다음 3개를 읽고 싶으면
-	// sizeof(float) * 6을 하면 되지
+	g_Time += 0.01f;
+	if (g_Time > 1.0f)
+		g_Time = 0.f;
 
-	// 이게 우리가 앞으로 이것저것 추가가 될 건데 xyz를 읽고 그 다음 sizeof(float) * 3일 때 
-	// 3씩 건너뛰었을 때 그 다음 값이 x일지 아닐지 알 수 없어 
-	// 그러니까 다음 읽을 데이터의 사이드를 알려주는 이게 필요
+	GLuint uTime = glGetUniformLocation(m_SolidRectShader, "u_Time");
+	glUniform1f(uTime, g_Time);// 1.f);
 
+	GLuint aPos = glGetAttribLocation(m_SolidRectShader, "a_Position");
+	GLuint aCol = glGetAttribLocation(m_SolidRectShader, "a_Color");
 
+	glEnableVertexAttribArray(aPos);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect); //총 18개의 float point가 들어가있음.
+	glVertexAttribPointer(aPos, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0); //그리고 vbo에 들어가 있는 것을 3개씩 꺼내서 sizeof(float)*3씩 뛰어서 읽어라
+	//저 자리에 0으로 넣으면 알아서 3칸씩 띄라고 하는구나! 알고 문제없이 작동함
+	//두번째 인자가 4라는건 4개씩 읽고, sizeof(float)*4 칸씩 뛰어라
 
+	glEnableVertexAttribArray(aCol);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBORectColor); //총 18개의 float point가 들어가있음.
+	glVertexAttribPointer(aCol, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
 
-	glDrawArrays(GL_TRIANGLES, 0, 6); // primitive가 여기 이 gl_triangles.
-	// array의 0번째부터 시작해서 총 6개의 vertex를 그리라는 거
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	glDisableVertexAttribArray(attribPosition);
+	//glDisableVertexAttribArray(attribPosition);
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
 }
+
+void Renderer::Lecture2()
+{
+	glUseProgram(m_SolidRectShader);
+
+	glEnableVertexAttribArray(0);
+	//glBindBuffer(GL_ARRAY_BUFFER, m_VBOTri); //총 18개의 float point가 들어가있음.
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOQuads); //총 18개의 float point가 들어가있음.
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0); //그리고 vbo에 들어가 있는 것을 3개씩 꺼내서 sizeof(float)*3씩 뛰어서 읽어라
+	//저 자리에 0으로 넣으면 알아서 3칸씩 띄라고 하는구나 알고 문제없이 작동함
+
+	glDrawArrays(GL_TRIANGLES, 0, m_VBOQuadsCount);
+
+	glDisableVertexAttribArray(0);
+}
+
+void Renderer::Lecture3()
+{
+	glUseProgram(m_SolidRectShader);
+
+	glEnableVertexAttribArray(0);
+	//glBindBuffer(GL_ARRAY_BUFFER, m_VBOTri); //총 18개의 float point가 들어가있음.
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO_GridMesh); //총 18개의 float point가 들어가있음.
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0); //그리고 vbo에 들어가 있는 것을 3개씩 꺼내서 sizeof(float)*3씩 뛰어서 읽어라
+	//저 자리에 0으로 넣으면 알아서 3칸씩 띄라고 하는구나 알고 문제없이 작동함
+
+	//glDrawArrays(GL_TRIANGLES, 0, m_GridMesh_count);
+	glDrawArrays(GL_LINE_STRIP, 0, m_GridMesh_count);
+
+	glDisableVertexAttribArray(0);
+}
+
+void Renderer::Lecture4()
+{
+
+	glUseProgram(m_SimpleVelShader);
+
+	// utime을 하려면 일단 포지션을 받아와야 함
+	GLuint uTime = glGetUniformLocation(m_SimpleVelShader, "u_Time"); //
+
+	// 아이템을 이용해서 외부에서 값 셋팅
+	// 지금 float포인트 하나지만 나중에는 벡터라던가 그런거 넣을수있음
+	// ppt에 있음 2개에다 플랫포인트 glUniform2f 이런식임
+	glUniform1f(uTime, g_Time);
+
+	g_Time += 0.0001;
+
+
+	GLuint aPos = glGetAttribLocation(m_SimpleVelShader, "a_Position");
+	GLuint aVel = glGetAttribLocation(m_SimpleVelShader, "a_Vel");
+
+	// 여기 들어가는게 뭔지? 싷머에 나오면 헷갈리지 말것
+	// get해서 받아온 id를 여기다가 넣어주는 것 
+	glEnableVertexAttribArray(aPos);
+	glEnableVertexAttribArray(aVel);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOQuads);
+
+	// 이 포인터도 마찬가지. aPos 넣어주는거
+
+	//glVertexAttribPointer(aPos , 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0); 
+	// 그리고 여기 지금 sizeof(float)*3 얘는
+	// x y z x1 y1 z1 ... 원래는 이렇게 됐는데 속도를 추가하니까 
+	// x y z vx vy vz x1 y1 z1 vx vy vz... 이렇게 됐음 
+	// 지금 3이면 그다음 읽을 곳은 x y z 이구나 라고 생각하고 속도를 포지션으로 읽어오게 됨
+	// ( x1, y1, z1을 다음포지션으로 읽는 게 아니고)
+	// 그래서 x y z 까지를 sizeof(float)*3 얘를 vz까지로 바꿔야만 x y z 세 개를 읽고 그 다음 x1 y1 z1 세 개를 읽게 되는 것
+	// 그래서 6으로 바뀌어야 한다.
+	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
+
+
+	// glVertexAttribPointer(aVel, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0); 위에꺼 6으로 바꾸고 얘를 추가했어
+	// 근데 이상태로 그냥 apos 값만 바꾸면 잘못된 값을 읽어옴.
+	// 그래서 최초 시작지점을 x y z 다음으로 바꿔줘야 함
+	// 시작지점을 sizeof(float)*6 에서 3만큼 더 밀어줘야 하니까 (GLvoid*)(sizeof(float)*3) glvoid 플로셍 3번째부터 시작한다고
+	// 알려줘야 함
+	glVertexAttribPointer(aVel, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (GLvoid*)(sizeof(float) * 3));
+
+	glDrawArrays(GL_TRIANGLES, 0, m_VBOQuadsCount);
+	glDisableVertexAttribArray(aPos);
+	glDisableVertexAttribArray(aVel);
+
+}
+
+void Renderer::Lecture5()
+{
+	// 8개 짜리
+	glUseProgram(m_SimpleVelShader);
+
+	GLuint uTime = glGetUniformLocation(m_SimpleVelShader, "u_Time"); //
+	GLuint uRepeat = glGetUniformLocation(m_SimpleVelShader, "u_Repeat");
+	glUniform1f(uTime, g_Time);
+	g_Time += 0.0001;
+
+
+	GLuint aPos = glGetAttribLocation(m_SimpleVelShader, "a_Position");
+	GLuint aVel = glGetAttribLocation(m_SimpleVelShader, "a_Vel");
+	GLuint aStartLife = glGetAttribLocation(m_SimpleVelShader, "a_StartLife");
+	
+	
+	// 
+
+	glEnableVertexAttribArray(aPos);
+	glEnableVertexAttribArray(aVel);
+	glEnableVertexAttribArray(aStartLife
+	);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOQuads);
+
+	// (x,y,z,vx,vy,vz,s,l,     x,y,z,vx,vy,vz,s,l...)
+	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, 0);
+
+	glVertexAttribPointer(aVel, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (GLvoid*)(sizeof(float) * 3));
+	glVertexAttribPointer(aStartLife, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (GLvoid*)(sizeof(float) * 6));
+
+	glDrawArrays(GL_TRIANGLES, 0, m_VBOQuadsCount);
+	glDisableVertexAttribArray(aPos);
+	glDisableVertexAttribArray(aVel);
+
+}
+
+
+void Renderer::Lecture6()
+{
+
+	GLuint shader = m_SinTrailShader;
+
+
+	// 알파값 켜는 부분
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+	glUseProgram(shader);
+
+	GLuint uTime = glGetUniformLocation(shader, "u_Time" ); //
+	glUniform1f(uTime, g_Time);
+
+	g_Time += 0.0001f;
+
+	GLuint aPos = glGetAttribLocation(shader, "a_Position");
+	GLuint aVel = glGetAttribLocation(shader, "a_Vel");
+	//GLuint aTemp = glGetAttribLocation(shader, "a_Temp");
+	GLuint aRatio = glGetAttribLocation(shader, "a_StartLifeRatioAmp");
+	GLuint aValue = glGetAttribLocation(shader, "a_value");
+	GLuint aColor = glGetAttribLocation(shader, "a_Color");
+
+	glEnableVertexAttribArray(aPos);
+	glEnableVertexAttribArray(aVel);
+	//glEnableVertexAttribArray(aTemp);
+	glEnableVertexAttribArray(aRatio);
+	glEnableVertexAttribArray(aValue);
+	glEnableVertexAttribArray(aColor);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOQuads);
+
+	// (x,y,z,vx,vy,vz,s,l,     x,y,z,vx,vy,vz,s,l...)
+	// 꼭 안써도 
+
+	// 다섯번째 인자는 얘가 등장한 이후 다음 또 얘가 등장할 위치임
+	//sizeof(float) * 11 라는 건 하나의 묶음이 11개 있다는거임
+	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, 0);
+	glVertexAttribPointer(aVel, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float) * 3));
+	glVertexAttribPointer(aRatio, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float)*6));
+	glVertexAttribPointer(aValue, 1, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float)*10));
+	glVertexAttribPointer(aColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float)*11));
+
+	glDrawArrays(GL_TRIANGLES, 0, m_VBOQuadsCount);
+	glDisableVertexAttribArray(aPos);
+	glDisableVertexAttribArray(aVel);
+	glDisableVertexAttribArray(aRatio);
+	glDisableVertexAttribArray(aValue);
+	glDisableVertexAttribArray(aColor);
+
+
+}
+void Renderer::GenQuadsVBO(int count, bool bRandPos, GLuint *id, GLuint *vcount)
+{
+
+	float size = 0.01f;
+	int countQuad = count; 
+	float verticesPerQuad = 6; //쿼드 하나 만들기 위해 버텍스 6개 쓸거임
+	int floatsPerVertex = 3 + 3 + 2 +2+1+4; // 버텍스당 플로트가 몉개 필요? 포인트3+속도3+2(타임두개) + 2(ratio,amp) + 1(value) + 4(color)
+	float arraySize = countQuad * verticesPerQuad * floatsPerVertex;
+	float *vertices = new float[arraySize];
+
+	for (int i = 0; i < countQuad; i++)
+	{
+		float randX, randY, randZ;
+		float randVelX, randVelY, randVelZ;
+		float StartT, LifeT;
+		float StartTMax = 6;
+		float LifeTMax = 3.0f;
+		float ratio, amp;
+		float ratioMin = 2.f;
+		float ratioThres = 4.f;
+		float ampMin = -0.1f;
+		float ampThres = 0.4f;
+		float value = 0.0f;
+		float randThres = 1.0f;
+
+		float r, g, b, a;
+
+		int index = i * verticesPerQuad * floatsPerVertex; //4로바꾸면 24가 됨
+
+		if (bRandPos) {
+
+			randX = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
+			randY = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
+		}
+		else {
+			randX = 0.f;
+			randY = 0.f;
+		}
+
+		int temp = rand();
+
+		randVelX = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
+		randVelY = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
+		randVelZ = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
+
+		StartT= 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
+		LifeT = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
+
+		ratio = ratioMin + ((float)rand() / (float)RAND_MAX)*ratioThres;
+		amp = ampMin + ((float)rand() / (float)RAND_MAX)*ampThres;
+
+		value = (((float)rand() / (float)RAND_MAX))*randThres;
+
+		r = ((float)rand() / (float)RAND_MAX);
+		g = ((float)rand() / (float)RAND_MAX);
+		b = ((float)rand() / (float)RAND_MAX);
+		a = 1.0f;
+
+		vertices[index] = randX - size; index++;
+		vertices[index] = randY - size; index++;
+		vertices[index] = 0.f; index++;
+		vertices[index] = randVelX; index++;
+		vertices[index] = randVelY; index++;
+		vertices[index] = randVelZ; index++;
+		vertices[index] = StartT; index++;
+		vertices[index] = LifeT; index++;
+		vertices[index] = ratio; index++;
+		vertices[index] = amp; index++;
+		vertices[index] = value; index++;
+		vertices[index] = r; index++;
+		vertices[index] = g; index++;
+		vertices[index] = b; index++;
+		vertices[index] = a; index++;
+
+
+		vertices[index] = randX - size; index++;
+		vertices[index] = randY + size; index++;
+		vertices[index] = 0.f; index++;
+		vertices[index] = randVelX; index++;
+		vertices[index] = randVelY; index++;
+		vertices[index] = randVelZ; index++;
+		vertices[index] = StartT; index++;
+		vertices[index] = LifeT; index++;
+		vertices[index] = ratio; index++;
+		vertices[index] = amp; index++;
+		vertices[index] = value; index++;
+		vertices[index] = r; index++;
+		vertices[index] = g; index++;
+		vertices[index] = b; index++;
+		vertices[index] = a; index++;
+
+		vertices[index] = randX + size; index++;
+		vertices[index] = randY + size; index++;
+		vertices[index] = 0.f; index++;
+		vertices[index] = randVelX; index++;
+		vertices[index] = randVelY; index++;
+		vertices[index] = randVelZ; index++;
+		vertices[index] = StartT; index++;
+		vertices[index] = LifeT; index++;
+		vertices[index] = ratio; index++;
+		vertices[index] = amp; index++;
+		vertices[index] = value; index++;
+		vertices[index] = r; index++;
+		vertices[index] = g; index++;
+		vertices[index] = b; index++;
+		vertices[index] = a; index++;
+
+		vertices[index] = randX - size; index++;
+		vertices[index] = randY - size; index++;
+		vertices[index] = 0.f; index++;
+		vertices[index] = randVelX; index++;
+		vertices[index] = randVelY; index++;
+		vertices[index] = randVelZ; index++;
+		vertices[index] = StartT; index++;
+		vertices[index] = LifeT; index++;
+		vertices[index] = ratio; index++;
+		vertices[index] = amp; index++;
+		vertices[index] = value; index++;
+		vertices[index] = r; index++;
+		vertices[index] = g; index++;
+		vertices[index] = b; index++;
+		vertices[index] = a; index++;
+
+		vertices[index] = randX + size; index++;
+		vertices[index] = randY + size; index++;
+		vertices[index] = 0.f; index++;
+		vertices[index] = randVelX; index++;
+		vertices[index] = randVelY; index++;
+		vertices[index] = randVelZ; index++;
+		vertices[index] = StartT; index++;
+		vertices[index] = LifeT; index++;
+		vertices[index] = ratio; index++;
+		vertices[index] = amp; index++;
+		vertices[index] = value; index++;
+		vertices[index] = r; index++;
+		vertices[index] = g; index++;
+		vertices[index] = b; index++;
+		vertices[index] = a; index++;
+
+		vertices[index] = randX + size; index++;
+		vertices[index] = randY - size; index++;
+		vertices[index] = 0.f; index++;
+		vertices[index] = randVelX; index++;
+		vertices[index] = randVelY; index++;
+		vertices[index] = randVelZ; index++;
+		vertices[index] = StartT; index++;
+		vertices[index] = LifeT; index++;
+		vertices[index] = ratio; index++;
+		vertices[index] = amp; index++;
+		vertices[index] = value; index++;
+		vertices[index] = r; index++;
+		vertices[index] = g; index++;
+		vertices[index] = b; index++;
+		vertices[index] = a; index++;
+	}
+
+	// 이 위는 gpu와 전혀 상관없는 세팅 그러니까
+	// gpu에 전해주기 위해서 vboID라는 아이디를 하나 세팅해주고
+	// 
+
+	GLuint vboID = 0;
+
+	glGenBuffers(1, &vboID);
+	glBindBuffer(GL_ARRAY_BUFFER, vboID); // 전해주고 
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * arraySize, vertices, GL_STATIC_DRAW); // arraysize만큼 전해주라고 하는거
+
+	*vcount = countQuad * verticesPerQuad;
+	*id = vboID;
+	delete(vertices);
+}
+
+
+void Renderer::CreateProxyGeometry()
+{
+	float basePosX = -0.5f;
+	float basePosY = -0.5f;
+	float targetPosX = 0.5f;
+	float targetPosY = 0.5f;
+
+	int pointCountX = 32;
+	int pointCountY = 32;
+
+	float width = targetPosX - basePosX;
+	float height = targetPosY - basePosY;
+
+	float* point = new float[pointCountX*pointCountY * 2];
+	float* vertices = new float[(pointCountX - 1)*(pointCountY - 1) * 2 * 3 * 3];
+	m_GridMesh_count = (pointCountX - 1)*(pointCountY - 1) * 2 * 3;
+
+	//Prepare points
+	for (int x = 0; x < pointCountX; x++)
+	{
+		for (int y = 0; y < pointCountY; y++)
+		{
+			point[(y*pointCountX + x) * 2 + 0] = basePosX + width * (x / (float)(pointCountX - 1));
+			point[(y*pointCountX + x) * 2 + 1] = basePosY + height * (y / (float)(pointCountY - 1));
+		}
+	}
+
+	//Make triangles
+	int vertIndex = 0;
+	for (int x = 0; x < pointCountX - 1; x++)
+	{
+		for (int y = 0; y < pointCountY - 1; y++)
+		{
+			//Triangle part 1
+			vertices[vertIndex] = point[(y*pointCountX + x) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[(y*pointCountX + x) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1)*pointCountX + (x + 1)) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1)*pointCountX + (x + 1)) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1)*pointCountX + x) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1)*pointCountX + x) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+
+			//Triangle part 2
+			vertices[vertIndex] = point[(y*pointCountX + x) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[(y*pointCountX + x) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+			vertices[vertIndex] = point[(y*pointCountX + (x + 1)) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[(y*pointCountX + (x + 1)) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1)*pointCountX + (x + 1)) * 2 + 0];
+			vertIndex++;
+			vertices[vertIndex] = point[((y + 1)*pointCountX + (x + 1)) * 2 + 1];
+			vertIndex++;
+			vertices[vertIndex] = 0.f;
+			vertIndex++;
+		}
+	}
+
+	glGenBuffers(1, &m_VBO_GridMesh);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO_GridMesh);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(pointCountX - 1)*(pointCountY - 1) * 2 * 3 * 3, vertices, GL_STATIC_DRAW);
+}
+
