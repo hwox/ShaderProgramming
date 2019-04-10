@@ -25,18 +25,18 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	m_SolidRectShader = CompileShaders("./Shaders/SolidRect.vs", "./Shaders/SolidRect.fs");
 	m_SimpleVelShader = CompileShaders("./Shaders/SimpleVal.vs", "./Shaders/SimpleVal.fs");
 	m_SinTrailShader = CompileShaders("./Shaders/SimpleVal.vs", "./Shaders/SimpleVal.fs");
+	m_ffSandBox = CompileShaders("./Shaders/ffSandBox.vs", "./Shaders/ffSandBox.fs");
 
 	//Create VBOs
 	CreateVertexBufferObjects();
 
-	GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
-	GenQuadsVBO(100, false, &m_VBOQuads1, &m_VBOQuadsCount1);
+	//GenQuadsVBO(1, false, &m_VBOQuads, &m_VBOQuadsCount);
 	CreateProxyGeometry();
 }
 
 void Renderer::CreateVertexBufferObjects()
 {
-	float size = 0.02f;
+	float size = 0.5f;
 	float rect[]
 		=
 	{
@@ -79,6 +79,7 @@ void Renderer::CreateVertexBufferObjects()
 	glGenBuffers(1, &m_VBORectColor); //버텍스 버퍼 오브젝트가 성공을 했으면 1보다 큰 수가 리턴
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBORectColor);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(color), color, GL_STATIC_DRAW);
+
 }
 
 void Renderer::AddShader(GLuint ShaderProgram, const char* pShaderText, GLenum ShaderType)
@@ -314,17 +315,13 @@ void Renderer::Test()
 {
 	glUseProgram(m_SolidRectShader);
 
-	//int attribPosition = glGetAttribLocation(m_SolidRectShader, "a_Position");
 
-	g_Time += 0.01f;
-	if (g_Time > 1.0f)
-		g_Time = 0.f;
 
 	GLuint uTime = glGetUniformLocation(m_SolidRectShader, "u_Time");
 	glUniform1f(uTime, g_Time);// 1.f);
 
 	GLuint aPos = glGetAttribLocation(m_SolidRectShader, "a_Position");
-	GLuint aCol = glGetAttribLocation(m_SolidRectShader, "a_Color");
+	//GLuint aCol = glGetAttribLocation(m_SolidRectShader, "a_Color");
 
 	glEnableVertexAttribArray(aPos);
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect); //총 18개의 float point가 들어가있음.
@@ -332,15 +329,12 @@ void Renderer::Test()
 	//저 자리에 0으로 넣으면 알아서 3칸씩 띄라고 하는구나! 알고 문제없이 작동함
 	//두번째 인자가 4라는건 4개씩 읽고, sizeof(float)*4 칸씩 뛰어라
 
-	glEnableVertexAttribArray(aCol);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBORectColor); //총 18개의 float point가 들어가있음.
-	glVertexAttribPointer(aCol, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	//glDisableVertexAttribArray(attribPosition);
 	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
+
 }
 
 void Renderer::Lecture2()
@@ -516,10 +510,26 @@ void Renderer::Lecture6()
 
 
 }
+
+
+void Renderer::Lecture7()
+{
+
+	GLuint shader = m_ffSandBox;
+	glUseProgram(shader);
+
+	GLuint aPos = glGetAttribLocation(shader, "a_Position");
+
+	glEnableVertexAttribArray(aPos);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect);
+	glVertexAttribPointer(aPos, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDisableVertexAttribArray(aPos);
+}
 void Renderer::GenQuadsVBO(int count, bool bRandPos, GLuint *id, GLuint *vcount)
 {
 
-	float size = 0.01f;
+	float size = 0.5f;
 	int countQuad = count; 
 	float verticesPerQuad = 6; //쿼드 하나 만들기 위해 버텍스 6개 쓸거임
 	int floatsPerVertex = 3 + 3 + 2 +2+1+4; // 버텍스당 플로트가 몉개 필요? 포인트3+속도3+2(타임두개) + 2(ratio,amp) + 1(value) + 4(color)

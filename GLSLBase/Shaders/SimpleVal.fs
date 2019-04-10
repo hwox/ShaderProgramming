@@ -10,10 +10,13 @@ in float v_Radius;
 
 
 void main(){
-	
+	float dis = sqrt(v_OriXY.x * v_OriXY.x + v_OriXY.y*v_OriXY.y);
+
 	vec4 newColor;
 	if(sqrt(v_OriXY.x * v_OriXY.x + v_OriXY.y*v_OriXY.y) < v_Radius){
 		newColor = v_Color;
+		newColor.a = dis / v_Radius ;
+
 	}
 	else{
 		newColor = vec4(0,0,0,0);

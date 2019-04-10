@@ -28,6 +28,7 @@ public:
 
 	void Lecture5();
 	void Lecture6();
+	void Lecture7();
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
 	bool ReadFile(char* filename, std::string *target);
@@ -44,8 +45,7 @@ private:
 	unsigned int m_WindowSizeX = 0;
 	unsigned int m_WindowSizeY = 0;
 
-	GLuint m_VBORect = 0;
-	GLuint m_SolidRectShader = 0;
+
 
 	GLuint m_VBOTri = 0;
 	GLuint m_VBOQuads = 0;
@@ -60,7 +60,10 @@ private:
 	GLuint m_VBORectColor = 0;
 
 	//shader
+	GLuint m_VBORect = 0;
+	GLuint m_SolidRectShader = 0;
 	GLuint m_SimpleVelShader = 0;
 	GLuint m_SinTrailShader = 0;
+	GLuint m_ffSandBox = 0;
 };
 
