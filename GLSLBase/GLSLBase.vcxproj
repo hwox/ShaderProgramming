@@ -175,6 +175,8 @@
   <ItemGroup>
     <None Include="Shaders\ffSandBox.fs" />
     <None Include="Shaders\ffSandBox.vs" />
+    <None Include="Shaders\FillAll.fs" />
+    <None Include="Shaders\FillAll.vs" />
     <None Include="Shaders\SimpleVal.fs" />
     <None Include="Shaders\SimpleVal.vs" />
     <None Include="Shaders\SimpleVal2.fs" />

@@ -26,17 +26,24 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	m_SimpleVelShader = CompileShaders("./Shaders/SimpleVal.vs", "./Shaders/SimpleVal.fs");
 	m_SinTrailShader = CompileShaders("./Shaders/SimpleVal.vs", "./Shaders/SimpleVal.fs");
 	m_ffSandBox = CompileShaders("./Shaders/ffSandBox.vs", "./Shaders/ffSandBox.fs");
+	m_FillAllShader = CompileShaders("./Shaders/FillAll.vs", "./Shaders/FillAll.fs");
 
 	//Create VBOs
 	CreateVertexBufferObjects();
 
-	//GenQuadsVBO(1, false, &m_VBOQuads, &m_VBOQuadsCount);
+	// Load Textures
+	m_ParticleTexture = CreatePngTexture("./Textures/particle.png");
+	m_ParticleTexture1 = CreatePngTexture("./Textures/particle.png");
+	m_ParticleTexture2 = CreatePngTexture("./Textures/particle.png");
+
+	GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
+	GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
 	CreateProxyGeometry();
 }
 
 void Renderer::CreateVertexBufferObjects()
 {
-	float size = 0.5f;
+	float size = 0.01f;
 	float rect[]
 		=
 	{
@@ -474,6 +481,11 @@ void Renderer::Lecture6()
 
 	g_Time += 0.0001f;
 
+	GLuint uTex = glGetUniformLocation(shader, "u_Texture");
+	glUniform1i(uTex, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_ParticleTexture);
+
 	GLuint aPos = glGetAttribLocation(shader, "a_Position");
 	GLuint aVel = glGetAttribLocation(shader, "a_Vel");
 	//GLuint aTemp = glGetAttribLocation(shader, "a_Temp");
@@ -515,21 +527,42 @@ void Renderer::Lecture6()
 void Renderer::Lecture7()
 {
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+	GLfloat points[] = {0,0,0,0.5,0.5,0.3,0.3,-0.2,-0.2, 0.3, 0.3};
 	GLuint shader = m_ffSandBox;
-	glUseProgram(shader);
+
+	GLuint uPoints = glGetUniformLocation(shader, "u_Points");
+	glUniform2fv(uPoints, 5, points);
+
+
+	// utime을 하려면 일단 포지션을 받아와야 함
+	GLuint uTime = glGetUniformLocation(m_SimpleVelShader, "u_Time"); //
+	glUniform1f(uTime, g_Time);
+	g_Time += 0.0001f;
 
 	GLuint aPos = glGetAttribLocation(shader, "a_Position");
+	GLuint aUV = glGetAttribLocation(shader, "a_UV");
+	glUseProgram(shader);
 
-	glEnableVertexAttribArray(aPos);
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect);
 	glVertexAttribPointer(aPos, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
+	glVertexAttribPointer(aUV, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (GLvoid*)(sizeof(float) * 4));
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDisableVertexAttribArray(aPos);
+	glEnableVertexAttribArray(aPos);
+	glEnableVertexAttribArray(aUV);
+
+
+
 }
+
+
 void Renderer::GenQuadsVBO(int count, bool bRandPos, GLuint *id, GLuint *vcount)
 {
 
-	float size = 0.5f;
+	float size = 0.01f;
 	int countQuad = count; 
 	float verticesPerQuad = 6; //쿼드 하나 만들기 위해 버텍스 6개 쓸거임
 	int floatsPerVertex = 3 + 3 + 2 +2+1+4; // 버텍스당 플로트가 몉개 필요? 포인트3+속도3+2(타임두개) + 2(ratio,amp) + 1(value) + 4(color)
@@ -776,5 +809,39 @@ void Renderer::CreateProxyGeometry()
 	glGenBuffers(1, &m_VBO_GridMesh);
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO_GridMesh);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(pointCountX - 1)*(pointCountY - 1) * 2 * 3 * 3, vertices, GL_STATIC_DRAW);
+}
+
+void Renderer::FillAll(float _in) {
+
+
+	GLuint shader = m_FillAllShader;
+
+
+	// 알파값 켜는 부분
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+	glUseProgram(shader);
+
+
+	GLuint aPos = glGetAttribLocation(shader, "a_Position");
+
+	glEnableVertexAttribArray(aPos);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOQuads);
+
+	// (x,y,z,vx,vy,vz,s,l,     x,y,z,vx,vy,vz,s,l...)
+	// 꼭 안써도 
+
+	// 다섯번째 인자는 얘가 등장한 이후 다음 또 얘가 등장할 위치임
+	//sizeof(float) * 11 라는 건 하나의 묶음이 11개 있다는거임
+	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, 0);
+
+	glDrawArrays(GL_TRIANGLES, 0, m_VBOQuadsCount);
+	glDisableVertexAttribArray(aPos);
+
+
 }
 

@@ -43,8 +43,8 @@ void main()
 
 	float newTime = u_Time - start;
 	if(newTime > 0 ){
-		newPos.x += sin(a_value*PI*2);
-		newPos.y += cos(a_value*PI*2);
+		newPos.x += sin(a_value*PI*2) ; // 여기다가 x,y 에 frace(u_Time) 하면 불꽃처럼된당
+		newPos.y += cos(a_value*PI*2) ;
 		newTime = mod(newTime, lifeTime);
 		newVel = newVel + c_Gravity * newTime;
 		newPos = newPos + a_Vel * newTime + 0.5*c_Gravity*newTime*newTime;

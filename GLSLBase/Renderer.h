@@ -29,6 +29,7 @@ public:
 	void Lecture5();
 	void Lecture6();
 	void Lecture7();
+	void FillAll(float);
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
 	bool ReadFile(char* filename, std::string *target);
@@ -65,5 +66,11 @@ private:
 	GLuint m_SimpleVelShader = 0;
 	GLuint m_SinTrailShader = 0;
 	GLuint m_ffSandBox = 0;
+	GLuint m_FillAllShader = 0;
+
+	//textures
+	GLuint m_ParticleTexture = 0;
+	GLuint m_ParticleTexture1 = 0;
+	GLuint m_ParticleTexture2 = 0;
 };
 

@@ -24,6 +24,8 @@ void RenderScene(void)
 {
 
 	// clear를 안하게 되면 알 수 없는 이미지가 차있거나 하는 경우가 종종있음. 
+
+	// 이걸 지우면 약간 흔적이 남아있는 느낌을 낼 수 있음 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -34,9 +36,9 @@ void RenderScene(void)
 
 	//g_Renderer->Lecture4();
 	//g_Renderer->Lecture5();
-	//g_Renderer->Lecture6();
-	g_Renderer->Lecture7();
-
+	g_Renderer->Lecture6();
+	//g_Renderer->Lecture7();
+	//g_Renderer->FillAll(0.2);
 	glutSwapBuffers();
 }
 
