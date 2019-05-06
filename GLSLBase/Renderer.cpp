@@ -26,19 +26,20 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	m_SimpleVelShader = CompileShaders("./Shaders/SimpleVal.vs", "./Shaders/SimpleVal.fs");
 	m_SinTrailShader = CompileShaders("./Shaders/SimpleVal.vs", "./Shaders/SimpleVal.fs");
 	m_ffSandBox = CompileShaders("./Shaders/ffSandBox.vs", "./Shaders/ffSandBox.fs");
-	m_FillAllShader = CompileShaders("./Shaders/FillAll.vs", "./Shaders/FillAll.fs");
-
+	//m_FillAllShader = CompileShaders("./Shaders/FillAll.vs", "./Shaders/FillAll.fs");
+	m_TextureShader = CompileShaders("./Shaders/TextureShader.vs", "./Shaders/TextureShader.fs");
 	//Create VBOs
 	CreateVertexBufferObjects();
 
 	// Load Textures
-	m_ParticleTexture = CreatePngTexture("./Textures/particle.png");
+	m_ParticleTexture = CreatePngTexture("./Textures/rgb.png");
 	m_ParticleTexture1 = CreatePngTexture("./Textures/particle.png");
 	m_ParticleTexture2 = CreatePngTexture("./Textures/particle.png");
 
-	GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
-	GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
+	//GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
+	//GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
 	CreateProxyGeometry();
+	CreateTextures();
 }
 
 void Renderer::CreateVertexBufferObjects()
@@ -60,16 +61,34 @@ void Renderer::CreateVertexBufferObjects()
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBORect);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(rect), rect, GL_STATIC_DRAW);
 
-	//lecture2
-	float tri[]
+
+	size = 0.5f;
+	float texRect[]
 		=
 	{
-		-1.0, -0.0, 0.f, 1.0, 0.0, 0.f, 0.0, 0.5, 0.f //Triangle1
+		-size, -size, 0.f, 0.0f, 0.0f, // x y z u v
+		-size,size, 0.f, 0.f, 1.0f,
+		size, size, 0.f, 1.0f, 1.0f,
+
+		-size, -size, 0.f, 0.0f, 0.0f,
+		size, size, 0.f, 1.0f, 1.0f,
+		size, -size, 0.f, 1.0f, 0.0f
 	};
 
-	glGenBuffers(1, &m_VBOTri); //버텍스 버퍼 오브젝트가 성공을 했으면 1보다 큰 수가 리턴
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBOTri);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(tri), tri, GL_STATIC_DRAW);
+	glGenBuffers(1, &m_VBOTextureRect);
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOTextureRect);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texRect), texRect, GL_STATIC_DRAW);
+
+	//lecture2
+	//float tri[]
+	//	=
+	//{
+	//	-1.0, -0.0, 0.f, 1.0, 0.0, 0.f, 0.0, 0.5, 0.f //Triangle1
+	//};
+
+	//glGenBuffers(1, &m_VBOTri); //버텍스 버퍼 오브젝트가 성공을 했으면 1보다 큰 수가 리턴
+	//glBindBuffer(GL_ARRAY_BUFFER, m_VBOTri);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(tri), tri, GL_STATIC_DRAW);
 
 
 	float color[]
@@ -86,6 +105,7 @@ void Renderer::CreateVertexBufferObjects()
 	glGenBuffers(1, &m_VBORectColor); //버텍스 버퍼 오브젝트가 성공을 했으면 1보다 큰 수가 리턴
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBORectColor);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(color), color, GL_STATIC_DRAW);
+
 
 }
 
@@ -343,7 +363,6 @@ void Renderer::Test()
 	glDisableVertexAttribArray(0);
 
 }
-
 void Renderer::Lecture2()
 {
 	glUseProgram(m_SolidRectShader);
@@ -358,7 +377,6 @@ void Renderer::Lecture2()
 
 	glDisableVertexAttribArray(0);
 }
-
 void Renderer::Lecture3()
 {
 	glUseProgram(m_SolidRectShader);
@@ -374,7 +392,6 @@ void Renderer::Lecture3()
 
 	glDisableVertexAttribArray(0);
 }
-
 void Renderer::Lecture4()
 {
 
@@ -425,7 +442,6 @@ void Renderer::Lecture4()
 	glDisableVertexAttribArray(aVel);
 
 }
-
 void Renderer::Lecture5()
 {
 	// 8개 짜리
@@ -461,8 +477,6 @@ void Renderer::Lecture5()
 	glDisableVertexAttribArray(aVel);
 
 }
-
-
 void Renderer::Lecture6()
 {
 
@@ -523,7 +537,6 @@ void Renderer::Lecture6()
 
 }
 
-
 void Renderer::Lecture7()
 {
 
@@ -539,7 +552,7 @@ void Renderer::Lecture7()
 
 
 	// utime을 하려면 일단 포지션을 받아와야 함
-	GLuint uTime = glGetUniformLocation(m_SimpleVelShader, "u_Time"); //
+	GLuint uTime = glGetUniformLocation(shader, "u_Time"); //
 	glUniform1f(uTime, g_Time);
 	g_Time += 0.0001f;
 
@@ -558,7 +571,41 @@ void Renderer::Lecture7()
 
 }
 
+void Renderer::DrawTextureRect(GLuint tex)
+{
 
+
+	GLuint shader = m_TextureShader;
+	glUseProgram(shader);
+
+	GLuint uTime = glGetUniformLocation(shader, "u_Time");
+	glUniform1f(uTime, g_Time);
+	g_Time += 0.001f;
+
+	GLuint uTex = glGetUniformLocation(shader, "u_Texture");
+	glUniform1i(uTex, 0);
+	glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, m_Checkerboard);
+
+	glBindTexture(GL_TEXTURE_2D, m_ParticleTexture);
+
+
+	GLuint aPos = glGetAttribLocation(shader, "a_Position");
+
+	GLuint aTex = glGetAttribLocation(shader, "a_TexPos");
+
+	glEnableVertexAttribArray(aPos);
+	glEnableVertexAttribArray(aTex);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOTextureRect);
+	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+	glVertexAttribPointer(aTex, 2, GL_FLOAT, GL_FALSE, sizeof(float)*5, (GLvoid*)(sizeof(float)*3));
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDisableVertexAttribArray(aPos);
+	glDisableVertexAttribArray(aTex);
+
+}
 void Renderer::GenQuadsVBO(int count, bool bRandPos, GLuint *id, GLuint *vcount)
 {
 
@@ -730,7 +777,6 @@ void Renderer::GenQuadsVBO(int count, bool bRandPos, GLuint *id, GLuint *vcount)
 	delete(vertices);
 }
 
-
 void Renderer::CreateProxyGeometry()
 {
 	float basePosX = -0.5f;
@@ -845,3 +891,32 @@ void Renderer::FillAll(float _in) {
 
 }
 
+void Renderer::CreateTextures() {
+	static const GLulong checkerboard[] =
+	{
+	0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000,
+	0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF,
+	0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000,
+	0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF,
+	0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000,
+	0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF,
+	0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000,
+	0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000, 0xFFFFFFFF
+	};
+
+
+	glGenTextures(1, &m_Checkerboard);
+	glBindTexture(GL_TEXTURE_2D, m_Checkerboard);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, checkerboard);
+
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+}
+
+void Renderer::CreateBmpTexture() {
+
+}

@@ -29,7 +29,10 @@ public:
 	void Lecture5();
 	void Lecture6();
 	void Lecture7();
+	void DrawTextureRect(GLuint tex);
 	void FillAll(float);
+	void CreateTextures();
+	void CreateBmpTexture();
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
 	bool ReadFile(char* filename, std::string *target);
@@ -60,6 +63,8 @@ private:
 
 	GLuint m_VBORectColor = 0;
 
+	GLuint m_VBOTextureRect = 0;
+
 	//shader
 	GLuint m_VBORect = 0;
 	GLuint m_SolidRectShader = 0;
@@ -72,5 +77,12 @@ private:
 	GLuint m_ParticleTexture = 0;
 	GLuint m_ParticleTexture1 = 0;
 	GLuint m_ParticleTexture2 = 0;
-};
+
+	GLuint m_TextureShader = 0;
+	
+	GLuint m_Checkerboard = 0;
+
+}
+
+;
 
