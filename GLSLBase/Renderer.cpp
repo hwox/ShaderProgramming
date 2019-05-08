@@ -35,6 +35,11 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	m_ParticleTexture = CreatePngTexture("./Textures/rgb.png");
 	m_ParticleTexture1 = CreatePngTexture("./Textures/particle.png");
 	m_ParticleTexture2 = CreatePngTexture("./Textures/particle.png");
+	m_KirbyTexture1 = CreatePngTexture("./Textures/kirby1.png");
+	m_KirbyTexture2 = CreatePngTexture("./Textures/kirby2.png");
+
+
+
 
 	//GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
 	//GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
@@ -456,8 +461,8 @@ void Renderer::Lecture5()
 	GLuint aPos = glGetAttribLocation(m_SimpleVelShader, "a_Position");
 	GLuint aVel = glGetAttribLocation(m_SimpleVelShader, "a_Vel");
 	GLuint aStartLife = glGetAttribLocation(m_SimpleVelShader, "a_StartLife");
-	
-	
+
+
 	// 
 
 	glEnableVertexAttribArray(aPos);
@@ -490,7 +495,7 @@ void Renderer::Lecture6()
 
 	glUseProgram(shader);
 
-	GLuint uTime = glGetUniformLocation(shader, "u_Time" ); //
+	GLuint uTime = glGetUniformLocation(shader, "u_Time"); //
 	glUniform1f(uTime, g_Time);
 
 	g_Time += 0.0001f;
@@ -523,9 +528,9 @@ void Renderer::Lecture6()
 	//sizeof(float) * 11 라는 건 하나의 묶음이 11개 있다는거임
 	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, 0);
 	glVertexAttribPointer(aVel, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float) * 3));
-	glVertexAttribPointer(aRatio, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float)*6));
-	glVertexAttribPointer(aValue, 1, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float)*10));
-	glVertexAttribPointer(aColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float)*11));
+	glVertexAttribPointer(aRatio, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float) * 6));
+	glVertexAttribPointer(aValue, 1, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float) * 10));
+	glVertexAttribPointer(aColor, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 15, (GLvoid*)(sizeof(float) * 11));
 
 	glDrawArrays(GL_TRIANGLES, 0, m_VBOQuadsCount);
 	glDisableVertexAttribArray(aPos);
@@ -544,7 +549,7 @@ void Renderer::Lecture7()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-	GLfloat points[] = {0,0,0,0.5,0.5,0.3,0.3,-0.2,-0.2, 0.3, 0.3};
+	GLfloat points[] = { 0,0,0,0.5,0.5,0.3,0.3,-0.2,-0.2, 0.3, 0.3 };
 	GLuint shader = m_ffSandBox;
 
 	GLuint uPoints = glGetUniformLocation(shader, "u_Points");
@@ -580,14 +585,53 @@ void Renderer::DrawTextureRect(GLuint tex)
 
 	GLuint uTime = glGetUniformLocation(shader, "u_Time");
 	glUniform1f(uTime, g_Time);
+
+
 	g_Time += 0.001f;
+
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_KirbyTexture1);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_KirbyTexture2);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, m_ParticleTexture2);
+
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, m_Checkerboard);
+
+	int texture_temp;
+
+	switch ((int)g_Time % 4) {
+	case 0:
+		texture_temp = 0;
+		break;
+	case 1:
+		texture_temp = 1;
+		break;
+	case 2:
+		texture_temp = 2;
+		break;
+	case 3:
+		texture_temp = 3;
+		break;
+	}
+
 
 	GLuint uTex = glGetUniformLocation(shader, "u_Texture");
 	glUniform1i(uTex, 0);
-	glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, m_Checkerboard);
 
-	glBindTexture(GL_TEXTURE_2D, m_ParticleTexture);
+	GLuint uTex1 = glGetUniformLocation(shader, "u_Texture1");
+	glUniform1i(uTex1, 1);
+
+	GLuint uTex2 = glGetUniformLocation(shader, "u_Texture2");
+	glUniform1i(uTex2, 2);
+
+	GLuint uTex3 = glGetUniformLocation(shader, "u_Texture3");
+	glUniform1i(uTex3, 3);
+
 
 
 	GLuint aPos = glGetAttribLocation(shader, "a_Position");
@@ -599,7 +643,7 @@ void Renderer::DrawTextureRect(GLuint tex)
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBOTextureRect);
 	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
-	glVertexAttribPointer(aTex, 2, GL_FLOAT, GL_FALSE, sizeof(float)*5, (GLvoid*)(sizeof(float)*3));
+	glVertexAttribPointer(aTex, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (GLvoid*)(sizeof(float) * 3));
 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glDisableVertexAttribArray(aPos);
@@ -610,9 +654,9 @@ void Renderer::GenQuadsVBO(int count, bool bRandPos, GLuint *id, GLuint *vcount)
 {
 
 	float size = 0.01f;
-	int countQuad = count; 
+	int countQuad = count;
 	float verticesPerQuad = 6; //쿼드 하나 만들기 위해 버텍스 6개 쓸거임
-	int floatsPerVertex = 3 + 3 + 2 +2+1+4; // 버텍스당 플로트가 몉개 필요? 포인트3+속도3+2(타임두개) + 2(ratio,amp) + 1(value) + 4(color)
+	int floatsPerVertex = 3 + 3 + 2 + 2 + 1 + 4; // 버텍스당 플로트가 몉개 필요? 포인트3+속도3+2(타임두개) + 2(ratio,amp) + 1(value) + 4(color)
 	float arraySize = countQuad * verticesPerQuad * floatsPerVertex;
 	float *vertices = new float[arraySize];
 
@@ -651,7 +695,7 @@ void Renderer::GenQuadsVBO(int count, bool bRandPos, GLuint *id, GLuint *vcount)
 		randVelY = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
 		randVelZ = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
 
-		StartT= 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
+		StartT = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
 		LifeT = 2.f*(((float)rand() / (float)RAND_MAX) - 0.5f);
 
 		ratio = ratioMin + ((float)rand() / (float)RAND_MAX)*ratioThres;

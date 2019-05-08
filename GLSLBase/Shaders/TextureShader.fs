@@ -1,8 +1,10 @@
 #version 450
 
 uniform sampler2D u_Texture;
+uniform sampler2D u_Texture1;
+uniform sampler2D u_Texture2;
+uniform sampler2D u_Texture3;
 out vec4 FragColor;
-//uniform sampler2D uTexSampler;
 in vec2 v_Tex;
 
 uniform float u_Time;
@@ -39,17 +41,45 @@ void main()
 	finalColor /= 5;
 	FragColor = finalColor;
 	*/
-
+	/*
 
 	vec2 newTex;
 	newTex.x = v_Tex.x;;
 	newTex.y = (2-floor(v_Tex.y * 3.0)); 
 	newTex.y += ((v_Tex.y) / 3.0);
+	newTex.y = v_Tex.y;
+	vec4 newColor;
+	
+	newColor1 = texture(u_Texture, newTex);
+	FragColor = vec4(newColor.rgb, 1);
+	*/
 
+	// multiple Textures
 	vec4 newColor;
 
-	newColor = texture(u_Texture, newTex);
-	FragColor = newColor;
+	vec2 newTex = vec2(v_Tex.x, 1.0-v_Tex.y); // 텍스쳐 불러오면 위아래가 반전되는 문제가 생기니까
+	// 1.0 - v_Tex.y 해주면 된다.
+
+	if(newTex.x < 0.5){
+		if(newTex.y < 0.5){
+			newColor = texture(u_Texture1, vec2(newTex.x*2, fract(newTex.y*2)));
+		}
+		else{
+			newColor = texture(u_Texture2, vec2(newTex.x*2, newTex.y));
+			}
+	} else{
+		if(newTex.y < 0.5){
+	
+		newColor = texture(u_Texture3, vec2(fract(newTex.x*2), fract(newTex.y*2)));
+		}
+		else{
+		newColor = texture(u_Texture, vec2(fract(newTex.x*2), newTex.y));
+		}
+	}
+
+	FragColor = vec4(newColor);
+
+
 
 
 }

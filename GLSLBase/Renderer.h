@@ -78,6 +78,13 @@ private:
 	GLuint m_ParticleTexture1 = 0;
 	GLuint m_ParticleTexture2 = 0;
 
+	GLuint m_KirbyTexture1 = 0;
+	GLuint m_KirbyTexture2 = 0;
+
+	//GLuint Textures[];
+
+
+
 	GLuint m_TextureShader = 0;
 	
 	GLuint m_Checkerboard = 0;
