@@ -173,6 +173,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\DrawNumber.fs" />
+    <None Include="Shaders\DrawNumber.vs" />
     <None Include="Shaders\ffSandBox.fs" />
     <None Include="Shaders\ffSandBox.vs" />
     <None Include="Shaders\FillAll.fs" />

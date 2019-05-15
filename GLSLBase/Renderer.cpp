@@ -28,6 +28,8 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	m_ffSandBox = CompileShaders("./Shaders/ffSandBox.vs", "./Shaders/ffSandBox.fs");
 	//m_FillAllShader = CompileShaders("./Shaders/FillAll.vs", "./Shaders/FillAll.fs");
 	m_TextureShader = CompileShaders("./Shaders/TextureShader.vs", "./Shaders/TextureShader.fs");
+	m_DrawNumberShader = CompileShaders("./Shaders/DrawNumber.vs", "./Shaders/DrawNumber.fs");
+		
 	//Create VBOs
 	CreateVertexBufferObjects();
 
@@ -35,11 +37,13 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	m_ParticleTexture = CreatePngTexture("./Textures/rgb.png");
 	m_ParticleTexture1 = CreatePngTexture("./Textures/particle.png");
 	m_ParticleTexture2 = CreatePngTexture("./Textures/particle.png");
-	m_KirbyTexture1 = CreatePngTexture("./Textures/kirby1.png");
-	m_KirbyTexture2 = CreatePngTexture("./Textures/kirby2.png");
+	m_KirbyTexture[1] = CreatePngTexture("./Textures/kirby1.png");
+	m_KirbyTexture[2] = CreatePngTexture("./Textures/kirby2.png");
+	
 
-
-
+	m_KirbysTexture = CreatePngTexture("./Textures/kirby2.png");
+	m_NumbersTexture = CreatePngTexture("./Textures/Numbers.png");
+	BindNumberTexture();
 
 	//GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
 	//GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
@@ -575,9 +579,60 @@ void Renderer::Lecture7()
 
 
 }
+void Renderer::BindNumberTexture() {
+	m_NumberTexture[0] = CreatePngTexture("./Textures/0.png");
+	m_NumberTexture[1] = CreatePngTexture("./Textures/1.png");
+	m_NumberTexture[2] = CreatePngTexture("./Textures/2.png");
+	m_NumberTexture[3] = CreatePngTexture("./Textures/3.png");
+	m_NumberTexture[4] = CreatePngTexture("./Textures/4.png");
+	m_NumberTexture[5] = CreatePngTexture("./Textures/5.png");
+	m_NumberTexture[6] = CreatePngTexture("./Textures/6.png");
+	m_NumberTexture[7] = CreatePngTexture("./Textures/7.png");
+	m_NumberTexture[8] = CreatePngTexture("./Textures/8.png");
+	m_NumberTexture[9] = CreatePngTexture("./Textures/9.png");
+}
+void Renderer::DrawNumber(int *number) {
 
+
+	GLuint shader = m_DrawNumberShader;
+
+	glUseProgram(shader);
+
+	// Uniform inputs
+	GLuint uNumber = glGetUniformLocation(shader, "u_Number");
+	glUniform1iv(uNumber, 3, number);
+
+
+
+	// vertex settings
+	GLuint aPos = glGetAttribLocation(shader, "a_Position");
+	GLuint aTex = glGetAttribLocation(shader, "a_TexPos");
+	glEnableVertexAttribArray(aPos);
+	glEnableVertexAttribArray(aTex);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOTextureRect);
+
+
+	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+	glVertexAttribPointer(aTex, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (GLvoid*)(sizeof(float)*3));
+
+	// Texture settings
+	GLuint uTex = glGetUniformLocation(shader, "u_Texture");
+	glUniform1i(uTex, 0);
+	glActiveTexture(GL_TEXTURE0); // 0번째 텍스쳐거기다가 m_NumberTexture를 끼워넣겠다
+	glBindTexture(GL_TEXTURE_2D, m_NumbersTexture);
+	
+
+	// Draw here
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	// Restore to default
+	glDisableVertexAttribArray(aPos);
+	glDisableVertexAttribArray(aTex);
+
+}
 void Renderer::DrawTextureRect(GLuint tex)
-{
+{`
 
 
 	GLuint shader = m_TextureShader;
@@ -589,13 +644,13 @@ void Renderer::DrawTextureRect(GLuint tex)
 
 	g_Time += 0.001f;
 
-
+	/*
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_KirbyTexture1);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, m_KirbyTexture2);
-
+*/
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, m_ParticleTexture2);
 

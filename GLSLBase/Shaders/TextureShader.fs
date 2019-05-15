@@ -57,9 +57,11 @@ void main()
 	// multiple Textures
 	vec4 newColor;
 
-	vec2 newTex = vec2(v_Tex.x, 1.0-v_Tex.y); // 텍스쳐 불러오면 위아래가 반전되는 문제가 생기니까
+	vec2 newTexPos = vec2(v_Tex.x, u_Time/6.0 + v_Tex.y/6.0);
+	FragColor = texture(u_Texture, newTexPos);
 	// 1.0 - v_Tex.y 해주면 된다.
-
+	/*	
+	vec2 newTex = vec2(v_Tex.x, 1.0-v_Tex.y); // 텍스쳐 불러오면 위아래가 반전되는 문제가 생기니까
 	if(newTex.x < 0.5){
 		if(newTex.y < 0.5){
 			newColor = texture(u_Texture1, vec2(newTex.x*2, fract(newTex.y*2)));
@@ -76,8 +78,10 @@ void main()
 		newColor = texture(u_Texture, vec2(fract(newTex.x*2), newTex.y));
 		}
 	}
-
 	FragColor = vec4(newColor);
+	*/
+
+	
 
 
 

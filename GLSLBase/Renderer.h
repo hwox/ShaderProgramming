@@ -33,6 +33,8 @@ public:
 	void FillAll(float);
 	void CreateTextures();
 	void CreateBmpTexture();
+	void DrawNumber(int* number);
+
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
 	bool ReadFile(char* filename, std::string *target);
@@ -48,7 +50,7 @@ private:
 	
 	unsigned int m_WindowSizeX = 0;
 	unsigned int m_WindowSizeY = 0;
-
+	void BindNumberTexture();
 
 
 	GLuint m_VBOTri = 0;
@@ -72,14 +74,19 @@ private:
 	GLuint m_SinTrailShader = 0;
 	GLuint m_ffSandBox = 0;
 	GLuint m_FillAllShader = 0;
+	GLuint m_DrawNumberShader = 0;
 
 	//textures
 	GLuint m_ParticleTexture = 0;
 	GLuint m_ParticleTexture1 = 0;
 	GLuint m_ParticleTexture2 = 0;
+	
+	GLuint m_KirbyTexture[10];
+	GLuint m_KirbysTexture;
 
-	GLuint m_KirbyTexture1 = 0;
-	GLuint m_KirbyTexture2 = 0;
+	GLuint m_NumbersTexture;
+	GLuint m_NumberTexture[10];
+	//GLuint m_KirbyTexture2 = 0;
 
 	//GLuint Textures[];
 
