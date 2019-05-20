@@ -67,6 +67,14 @@
     </None>
     <None Include="Shaders\DrawNumber.fs" />
     <None Include="Shaders\DrawNumber.vs" />
+    <None Include="Shaders\sprite.fs" />
+    <None Include="Shaders\sprite.vs" />
+    <None Include="Shaders\VSSandbox.fs">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="Shaders\VSSandbox.vs">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

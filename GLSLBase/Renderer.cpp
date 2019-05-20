@@ -29,7 +29,9 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	//m_FillAllShader = CompileShaders("./Shaders/FillAll.vs", "./Shaders/FillAll.fs");
 	m_TextureShader = CompileShaders("./Shaders/TextureShader.vs", "./Shaders/TextureShader.fs");
 	m_DrawNumberShader = CompileShaders("./Shaders/DrawNumber.vs", "./Shaders/DrawNumber.fs");
-		
+	m_SpriteAnim = CompileShaders("./Shaders/sprite.vs", "./Shaders/sprite.fs");
+	m_VSSandboxShader = CompileShaders("./Shaders/VSSandbox.vs", "./Shaders/VSSandbox.fs");
+	
 	//Create VBOs
 	CreateVertexBufferObjects();
 
@@ -44,6 +46,8 @@ void Renderer::Initialize(int windowSizeX, int windowSizeY)
 	m_KirbysTexture = CreatePngTexture("./Textures/kirby2.png");
 	m_NumbersTexture = CreatePngTexture("./Textures/Numbers.png");
 	BindNumberTexture();
+
+	m_SpriteAnimWalk = CreatePngTexture("./Textures/dog.png");
 
 	//GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
 	//GenQuadsVBO(1000, false, &m_VBOQuads, &m_VBOQuadsCount);
@@ -632,7 +636,7 @@ void Renderer::DrawNumber(int *number) {
 
 }
 void Renderer::DrawTextureRect(GLuint tex)
-{`
+{
 
 
 	GLuint shader = m_TextureShader;
@@ -1017,5 +1021,60 @@ void Renderer::CreateTextures() {
 }
 
 void Renderer::CreateBmpTexture() {
+
+}
+
+void Renderer::DrawSpriteSequence(int number) {
+
+
+	GLuint shader = m_SpriteAnim;
+	glUseProgram(shader);
+
+	GLuint uNumber = glGetUniformLocation(shader, "u_Number");
+	glUniform1f(uNumber, float(number));
+	GLuint ux = glGetUniformLocation(shader, "u_Resolx");
+	glUniform1f(ux, float(4));
+	GLuint uy = glGetUniformLocation(shader, "u_Resoly");
+	glUniform1f(uy, float(9));
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_SpriteAnimWalk);
+
+	GLuint aPos = glGetAttribLocation(shader, "a_Position");
+	GLuint aTex = glGetAttribLocation(shader, "a_TexPos");
+
+	glEnableVertexAttribArray(aPos);
+	glEnableVertexAttribArray(aTex);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBOTextureRect);
+	glVertexAttribPointer(aPos, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+	glVertexAttribPointer(aTex, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (GLvoid*)(sizeof(float) * 3));
+
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glDisableVertexAttribArray(aPos);
+	glDisableVertexAttribArray(aTex);
+
+}
+
+void Renderer::VSSandbox()
+{
+	GLuint shader = m_VSSandboxShader;
+	glUseProgram(shader);
+
+	static float gTime = 0; gTime += 0.05f;
+	GLuint uTime = glGetUniformLocation(shader, "u_Time");
+	glUniform1f(uTime, gTime);
+
+	//GLuint aPos = glGetAttribLocation(shader, "a_Position");
+	//glEnableVertexAttribArray(aPos);
+
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO_GridMesh); 
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+	//glDrawArrays(GL_TRIANGLES, 0, m_GridMesh_count);
+	glDrawArrays(GL_LINE_STRIP, 0, m_GridMesh_count);
+	glDisableVertexAttribArray(0);
 
 }

@@ -19,7 +19,7 @@ Renderer *g_Renderer = NULL;
 
 int g_WindowSizeX = 500;
 int g_WindowSizeY = 500;
-int g_number;
+int g_number = 0;
 void RenderScene(void)
 {
 
@@ -40,10 +40,12 @@ void RenderScene(void)
 	//g_Renderer->Lecture7();
 	//g_Renderer->DrawTextureRect(0);
 	//g_Renderer->FillAll(0.2);
-
-	int number[]={ 5,6,2 };
-
-	g_Renderer->DrawNumber(number);
+	g_Renderer->VSSandbox();
+	//int number[]={ 5,6,2 };
+	//g_number += 1;
+	//Sleep(100);
+	//g_Renderer->DrawNumber(number);
+	//g_Renderer->DrawSpriteSequence(g_number);
 	glutSwapBuffers();
 }
 

@@ -35,6 +35,10 @@ public:
 	void CreateBmpTexture();
 	void DrawNumber(int* number);
 
+	// 이 숫자는 전체 sprite 의 index의미 
+	void DrawSpriteSequence(int number);
+
+	void VSSandbox();
 private:
 	void Initialize(int windowSizeX, int windowSizeY);
 	bool ReadFile(char* filename, std::string *target);
@@ -75,6 +79,9 @@ private:
 	GLuint m_ffSandBox = 0;
 	GLuint m_FillAllShader = 0;
 	GLuint m_DrawNumberShader = 0;
+	GLuint m_SpriteAnim = 0;
+	GLuint m_VSSandboxShader = 0;
+
 
 	//textures
 	GLuint m_ParticleTexture = 0;
@@ -86,6 +93,8 @@ private:
 
 	GLuint m_NumbersTexture;
 	GLuint m_NumberTexture[10];
+
+	GLuint m_SpriteAnimWalk = 0;
 	//GLuint m_KirbyTexture2 = 0;
 
 	//GLuint Textures[];
